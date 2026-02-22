@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TG連絡用 連携登録</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background-color: #ccc; color: white; border: none; border-radius: 5px; font-weight: bold; }
+    button.ready { background-color: #00B900; }
+    #status { margin-top: 15px; font-size: 14px; font-weight: bold; color: #666; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 style="color: green;">連携登録フォーム（GitHub版）</h3>
+    <input type="text" id="userName" placeholder="生徒氏名">
+    <input type="email" id="userEmail" placeholder="登録メールアドレス">
+    
+    <button id="submitBtn" onclick="submitData()" disabled>LINE連携を準備中...</button>
+    <div id="status">システム状態: 読み込み中...</div>
+  </div>
+
+  <script>
+    const liffId = "2009195384-NxxfJnp6";
+    // GASのURLを設定済みです
+    const gasUrl = "https://script.google.com/macros/s/AKfycbzSaH8oXq8whmd8xlE6gWF6xFWUy53sfrmSH9vB67l9fJZBZLNWUI4bNJmuHC1DZ0Dd/exec";
+    let fetchedUserId = "";
+
+    window.onload = function() {
+      document.getElementById("status").innerText = "システム状態: LINEと通信中...";
+      
+      liff.init({ liffId: liffId }).then(() => {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        
+        const context = liff.getContext();
+        if (context && context.userId) {
+          fetchedUserId = context.userId;
+          document.getElementById("status").innerText = "連携準備完了！";
+          
+          const btn = document.getElementById("submitBtn");
+          btn.innerText = "登録する";
+          btn.classList.add("ready");
+          btn.disabled = false;
+        }
+      }).catch((err) => {
+        document.getElementById("status").innerText = "エラー: " + err;
+      });
+    };
+
+    function submitData() {
+      const name = document.getElementById('userName').value;
+      const email = document.getElementById('userEmail').value;
+
+      if (!name || !email) {
+        alert("氏名とメールアドレスを入力してください");
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerText = "名簿に書き込み中...";
+
+      // GitHubからGASへデータを飛ばす（fetch通信）
+      fetch(gasUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ userId: fetchedUserId, name: name, email: email })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.result === "success") {
+          alert("櫻井先生の名簿に登録されました！\n画面を閉じてください。");
+          liff.closeWindow();
+        } else {
+          throw new Error("GAS側での処理エラー");
+        }
+      })
+      .catch(error => {
+        alert("通信エラーが発生しました: " + error);
+        btn.disabled = false;
+        btn.innerText = "登録する";
+      });
+    }
+  </script>
+</body>
+</html>
