@@ -19,6 +19,7 @@
     <h3 style="color: green;">連携登録フォーム（GitHub版）</h3>
     <input type="text" id="userName" placeholder="生徒氏名">
     <input type="email" id="userEmail" placeholder="登録メールアドレス">
+    <input type="email" id="userEmailConfirm" placeholder="確認用メールアドレス（もう一度入力）">
     
     <button id="submitBtn" onclick="submitData()" disabled>LINE連携を準備中...</button>
     <div id="status">システム状態: 読み込み中...</div>
@@ -26,7 +27,7 @@
 
   <script>
     const liffId = "2009195384-NxxfJnp6";
-    // GASのURLを設定済みです
+    // GASのURL（変更不要です）
     const gasUrl = "https://script.google.com/macros/s/AKfycbzSaH8oXq8whmd8xlE6gWF6xFWUy53sfrmSH9vB67l9fJZBZLNWUI4bNJmuHC1DZ0Dd/exec";
     let fetchedUserId = "";
 
@@ -57,9 +58,18 @@
     function submitData() {
       const name = document.getElementById('userName').value;
       const email = document.getElementById('userEmail').value;
+      // ↓ 追加：確認用メールアドレスを取得 ↓
+      const emailConfirm = document.getElementById('userEmailConfirm').value;
 
-      if (!name || !email) {
-        alert("氏名とメールアドレスを入力してください");
+      // 未入力チェック
+      if (!name || !email || !emailConfirm) {
+        alert("すべての項目を入力してください");
+        return;
+      }
+
+      // ↓ 追加：メールアドレスが一致しているかチェック ↓
+      if (email !== emailConfirm) {
+        alert("確認用メールアドレスが一致しません。入力内容をもう一度確認してください。");
         return;
       }
 
